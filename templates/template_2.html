@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ cv.contact_info.full_name | e if cv.contact_info and cv.contact_info.full_name else 'CV' }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@700&family=Open+Sans:wght@400;600&display=swap');
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            line-height: 1.5;
+            color: #111; /* Slightly darker text */
+            background-color: #fff;
+            margin: 0;
+            padding: 0;
+            font-size: 10.5pt; /* Common classic size */
+        }
+
+        .cv-container {
+            max-width: 8.5in;
+            min-height: 11in;
+            margin: 20px auto;
+            padding: 0.8in 0.8in; /* Slightly larger margins */
+            background-color: #fff;
+            box-sizing: border-box;
+        }
+
+        header {
+            text-align: left; /* Left align for classic feel */
+            margin-bottom: 25px;
+        }
+
+        header h1 {
+            font-family: 'Merriweather', serif;
+            font-size: 24pt;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            color: #000;
+        }
+
+        .contact-info {
+            font-size: 10pt;
+            color: #333;
+            border-bottom: 1px solid #ccc; /* Line under contact */
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+        }
+
+        .contact-info a {
+            color: #333;
+            text-decoration: none;
+        }
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+         .contact-info span::after {
+            content: ' | ';
+            margin: 0 6px;
+            color: #bbb;
+        }
+        .contact-info span:last-child::after {
+            content: '';
+        }
+
+
+        section {
+            margin-bottom: 25px;
+            break-inside: avoid;
+        }
+
+        section h2 {
+            font-family: 'Merriweather', serif;
+            font-size: 13pt;
+            font-weight: 700;
+            color: #000;
+            margin-bottom: 15px;
+            padding-bottom: 6px;
+            border-bottom: 1.5px solid #aaa; /* Stronger section line */
+        }
+
+        .summary p {
+            margin-top: 0;
+            font-size: 10.5pt;
+        }
+
+        .item {
+            margin-bottom: 18px;
+            break-inside: avoid;
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 4px;
+        }
+
+        .item-title {
+            font-size: 11pt;
+            font-weight: 600; /* Bolder than body */
+            color: #000;
+            flex-grow: 1;
+            margin-right: 15px;
+        }
+         .item-subtitle {
+             font-size: 10.5pt;
+             font-weight: 400;
+             color: #333;
+             margin-bottom: 5px;
+        }
+
+        .item-dates {
+            font-size: 10pt;
+            font-weight: 400;
+            color: #444;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .item-description ul {
+            list-style-type: disc;
+            margin: 5px 0 0 0;
+            padding-left: 20px;
+        }
+
+        .item-description li {
+            margin-bottom: 5px;
+        }
+
+        .skills-list ul {
+             list-style: disc; /* Classic bullets */
+             padding-left: 20px;
+             margin: 0;
+        }
+         .skills-list li {
+            margin-bottom: 5px;
+         }
+         .skills-category {
+            font-weight: 600;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            font-size: 10.5pt;
+            color: #111;
+        }
+        .skills-category:first-child {
+             margin-top: 0;
+        }
+
+
+        a {
+            color: #000; /* Keep links black unless interaction needed */
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="cv-container">
+        <header>
+            {% if cv.contact_info and cv.contact_info.full_name %}
+            <h1>{{ cv.contact_info.full_name | e }}</h1>
+            {% else %}
+            <h1>Your Name</h1>
+            {% endif %}
+            <div class="contact-info">
+                {% if cv.contact_info %}
+                    {% if cv.contact_info.email %}<span>{{ cv.contact_info.email | e }}</span>{% endif %}
+                    {% if cv.contact_info.phone %}<span>{{ cv.contact_info.phone | e }}</span>{% endif %}
+                    {% if cv.contact_info.linkedin_url %}<span><a href="{{ cv.contact_info.linkedin_url | e }}">LinkedIn</a></span>{% endif %}
+                    {% if cv.contact_info.portfolio_url %}<span><a href="{{ cv.contact_info.portfolio_url | e }}">Portfolio</a></span>{% endif %}
+                    {% if cv.contact_info.address %}<span>{{ cv.contact_info.address | e }}</span>{% endif %}
+                {% endif %}
+            </div>
+        </header>
+
+        {% if cv.summary %}
+        <section class="summary">
+            <h2>Summary</h2>
+            <p>{{ cv.summary | e }}</p>
+        </section>
+        {% endif %}
+
+        {% if cv.work_experience %}
+        <section class="experience">
+            <h2>Work Experience</h2>
+            {% for job in cv.work_experience %}
+            <div class="item">
+                <div class="item-header">
+                    <span class="item-title">{{ job.job_title | e if job.job_title else 'Job Title' }}</span>
+                    <span class="item-dates">{{ job.start_date | e if job.start_date else 'Start' }} - {{ job.end_date | e if job.end_date else 'End' }}</span>
+                </div>
+                 <div class="item-subtitle">
+                    {{ job.company | e if job.company else 'Company Name' }}
+                    {% if job.location %}| {{ job.location | e }}{% endif %}
+                </div>
+                {% if job.description %}
+                <div class="item-description">
+                    <ul>
+                        {% for item in job.description %}
+                        <li>{{ item | e }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+
+         {% if cv.education %}
+        <section class="education">
+            <h2>Education</h2>
+            {% for edu in cv.education %}
+            <div class="item">
+                 <div class="item-header">
+                    <span class="item-title">{{ edu.degree | e if edu.degree else 'Degree' }}</span>
+                    <span class="item-dates">{{ edu.graduation_date | e if edu.graduation_date else 'Graduation Date' }}</span>
+                 </div>
+                 <div class="item-subtitle">
+                    {{ edu.institution | e if edu.institution else 'Institution Name' }}
+                    {% if edu.location %}| {{ edu.location | e }}{% endif %}
+                </div>
+                 {% if edu.details %}<p style="font-size: 10pt; margin-top: 4px;">{{ edu.details | e }}</p>{% endif %}
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+
+        {% if cv.skills %}
+        <section class="skills">
+             <h2>Skills</h2>
+              <div class="skills-list">
+                {# Check if skills is a list of SkillItem objects with categories #}
+                {% if cv.skills and cv.skills[0].category is defined %}
+                    {% for skill_cat in cv.skills %}
+                        {% if skill_cat.category and skill_cat.skills_list %}
+                            <div class="skills-category">{{ skill_cat.category | e }}:</div>
+                            <ul>
+                            {% for skill in skill_cat.skills_list %}
+                                <li>{{ skill | e }}</li>
+                            {% endfor %}
+                            </ul>
+                        {% elif skill_cat.skills_list %} {# Handle case with skills list but no category #}
+                            <ul>
+                             {% for skill in skill_cat.skills_list %}
+                                <li>{{ skill | e }}</li>
+                            {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endfor %}
+                {# Fallback: assume simple list of strings if structure doesn't match #}
+                {% elif cv.skills and cv.skills is iterable and not cv.skills[0] is mapping %}
+                     <ul>
+                     {% for skill in cv.skills %}
+                        <li>{{ skill | e }}</li>
+                     {% endfor %}
+                     </ul>
+                {% endif %}
+             </div>
+        </section>
+        {% endif %}
+
+    </div><!-- /.cv-container -->
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ cv.contact_info.full_name | e if cv.contact_info and cv.contact_info.full_name else 'CV' }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap');
+
+        body {
+            font-family: 'Lato', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #fff;
+            margin: 0;
+            padding: 0;
+            font-size: 11pt; /* Standard font size for CVs */
+        }
+
+        .cv-container {
+            max-width: 8.5in; /* Approx Letter width */
+            min-height: 11in; /* Approx Letter height */
+            margin: 20px auto; /* Center on page */
+            padding: 0.75in 0.75in; /* Standard margins */
+            background-color: #fff;
+            box-sizing: border-box; /* Include padding in width/height */
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1.5px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        header h1 {
+            font-size: 26pt;
+            font-weight: 700;
+            margin: 0 0 5px 0;
+            color: #222;
+            letter-spacing: 1px;
+        }
+
+        .contact-info {
+            font-size: 10pt;
+            color: #555;
+        }
+
+        .contact-info a {
+            color: #444;
+            text-decoration: none;
+        }
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+        .contact-info span::after {
+            content: ' | ';
+            margin: 0 5px;
+            color: #ccc;
+        }
+        .contact-info span:last-child::after {
+            content: ''; /* Remove separator after last item */
+        }
+
+
+        section {
+            margin-bottom: 25px;
+            break-inside: avoid; /* Try to prevent sections breaking across pages */
+        }
+
+        section h2 {
+            font-size: 14pt;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary p {
+            margin-top: 0;
+            font-size: 11pt;
+            color: #444;
+        }
+
+        .item {
+            margin-bottom: 20px;
+            break-inside: avoid; /* Try to keep each job/edu item together */
+        }
+
+        .item-header {
+            display: flex; /* Use flexbox for alignment */
+            justify-content: space-between; /* Push dates to the right */
+            align-items: baseline;
+            margin-bottom: 5px;
+        }
+
+        .item-title {
+            font-size: 12pt;
+            font-weight: 700;
+            color: #222;
+            flex-grow: 1; /* Allow title to take available space */
+            margin-right: 15px; /* Space before dates */
+        }
+        .item-subtitle {
+             font-size: 11pt;
+             font-weight: 400;
+             color: #555;
+             margin-top: -2px; /* Adjust vertical alignment if needed */
+             margin-bottom: 5px;
+        }
+
+        .item-dates {
+            font-size: 10pt;
+            font-weight: 300;
+            color: #666;
+            white-space: nowrap; /* Prevent dates from wrapping */
+            flex-shrink: 0; /* Don't let dates shrink */
+        }
+
+        .item-description ul {
+            list-style-type: disc;
+            margin: 5px 0 0 0;
+            padding-left: 20px; /* Standard bullet indentation */
+            color: #444;
+        }
+
+        .item-description li {
+            margin-bottom: 5px;
+            line-height: 1.5;
+        }
+
+        .skills-list ul {
+             list-style: none;
+             padding: 0;
+             margin: 0;
+        }
+        .skills-list li {
+             display: inline-block;
+             background-color: #f0f0f0;
+             color: #444;
+             border-radius: 4px;
+             padding: 4px 10px;
+             margin: 3px 5px 3px 0;
+             font-size: 10pt;
+        }
+        .skills-category { /* If using categories */
+            font-weight: 700;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            font-size: 10.5pt;
+            color: #333;
+        }
+        .skills-category:first-child {
+             margin-top: 0;
+        }
+
+
+        a { /* General link styling */
+            color: #0066cc; /* Subtle blue for links */
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="cv-container">
+        <header>
+            {% if cv.contact_info and cv.contact_info.full_name %}
+            <h1>{{ cv.contact_info.full_name | e }}</h1>
+            {% else %}
+            <h1>Your Name</h1>
+            {% endif %}
+            <div class="contact-info">
+                {% if cv.contact_info %}
+                    {% if cv.contact_info.email %}<span>{{ cv.contact_info.email | e }}</span>{% endif %}
+                    {% if cv.contact_info.phone %}<span>{{ cv.contact_info.phone | e }}</span>{% endif %}
+                    {% if cv.contact_info.linkedin_url %}<span><a href="{{ cv.contact_info.linkedin_url | e }}">LinkedIn</a></span>{% endif %}
+                    {% if cv.contact_info.portfolio_url %}<span><a href="{{ cv.contact_info.portfolio_url | e }}">Portfolio</a></span>{% endif %}
+                    {% if cv.contact_info.address %}<span>{{ cv.contact_info.address | e }}</span>{% endif %}
+                {% endif %}
+            </div>
+        </header>
+
+        {% if cv.summary %}
+        <section class="summary">
+            <h2>Summary</h2>
+            <p>{{ cv.summary | e }}</p>
+        </section>
+        {% endif %}
+
+        {% if cv.work_experience %}
+        <section class="experience">
+            <h2>Work Experience</h2>
+            {% for job in cv.work_experience %}
+            <div class="item">
+                <div class="item-header">
+                    <span class="item-title">{{ job.job_title | e if job.job_title else 'Job Title' }}</span>
+                    <span class="item-dates">{{ job.start_date | e if job.start_date else 'Start' }} - {{ job.end_date | e if job.end_date else 'End' }}</span>
+                </div>
+                <div class="item-subtitle">
+                    {{ job.company | e if job.company else 'Company Name' }}
+                    {% if job.location %}| {{ job.location | e }}{% endif %}
+                </div>
+                {% if job.description %}
+                <div class="item-description">
+                    <ul>
+                        {% for item in job.description %}
+                        <li>{{ item | e }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+
+         {% if cv.education %}
+        <section class="education">
+            <h2>Education</h2>
+            {% for edu in cv.education %}
+            <div class="item">
+                 <div class="item-header">
+                    <span class="item-title">{{ edu.degree | e if edu.degree else 'Degree' }}</span>
+                    <span class="item-dates">{{ edu.graduation_date | e if edu.graduation_date else 'Graduation Date' }}</span>
+                 </div>
+                 <div class="item-subtitle">
+                    {{ edu.institution | e if edu.institution else 'Institution Name' }}
+                    {% if edu.location %}| {{ edu.location | e }}{% endif %}
+                </div>
+                 {% if edu.details %}<p style="font-size: 10pt; margin-top: 5px; color: #555;">{{ edu.details | e }}</p>{% endif %}
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+
+        {% if cv.skills %}
+        <section class="skills">
+             <h2>Skills</h2>
+             <div class="skills-list">
+                {# Check if skills is a list of SkillItem objects with categories #}
+                {% if cv.skills and cv.skills[0].category is defined %}
+                    <ul>
+                    {% for skill_cat in cv.skills %}
+                        {% if skill_cat.category and skill_cat.skills_list %}
+                            <li class="skills-category">{{ skill_cat.category | e }}:</li>
+                            {% for skill in skill_cat.skills_list %}
+                                <li>{{ skill | e }}</li>
+                            {% endfor %}
+                        {% elif skill_cat.skills_list %} {# Handle case with skills list but no category #}
+                             {% for skill in skill_cat.skills_list %}
+                                <li>{{ skill | e }}</li>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                    </ul>
+                {# Fallback: assume simple list of strings if structure doesn't match #}
+                {% elif cv.skills and cv.skills is iterable and not cv.skills[0] is mapping %}
+                     <ul>
+                     {% for skill in cv.skills %}
+                        <li>{{ skill | e }}</li>
+                     {% endfor %}
+                     </ul>
+                {% endif %}
+             </div>
+        </section>
+        {% endif %}
+
+    </div><!-- /.cv-container -->
+</body>
+</html>
