@@ -34,7 +34,9 @@ venv.bak
 # IDEs
 .idea/
 .vscode/
-
+# Persistence file (if you ran the bot)
+bot_persistence.pkl
+*.pyc
 # OS specific
 .DS_Store
 Thumbs.db
