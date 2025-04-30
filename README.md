@@ -135,24 +135,24 @@ Before you begin, ensure you have the following installed:
 *   **Parsing Logic:** The Gemini API prompt for parsing CVs is located in `gemini_service.py` (`get_parsing_prompt` function). You can adjust this prompt to improve parsing accuracy or tailor it to specific CV formats.
 
 ## Folder Structure (Key Files)
-"""
-cvbuilder-telegram-bot/
-├── .env                  # Local environment variables (e.g., API keys, bot tokens) — NEVER commit this file
-├── .gitignore            # Specifies files and directories Git should ignore (e.g., .env, __pycache__)
-├── requirements.txt      # Python package dependencies with pinned versions
-├── main.py               # Main entry point: initializes the bot, sets up the dispatcher, and polling
-├── config.py             # Centralized configuration: environment loading, constants, templates, section mappings
-├── handlers.py           # Telegram handlers: commands (/start, /help), message responses, button callbacks
-├── flows.py              # Business logic: CV creation flows (create from scratch, upload existing CV)
-├── gemini_service.py     # Service layer for Google Gemini API: prompt construction, response parsing
-├── pdf_service.py        # Service layer for PDF generation: renders HTML templates with Jinja2 + WeasyPrint
-├── utils.py              # Utility functions: inline keyboards, text cleaning, temporary file management
-├── schemas.py            # Pydantic models: strict data validation and serialization of user CV data
-└── templates/            # HTML/CSS templates for generating beautiful, customizable CVs
-    ├── template_1.html   # Modern Minimalist Design (Single-column layout)
-    ├── template_2.html   # Classic Professional Design (Traditional resume style)
-    └── template_3.html   # Clean Two-Column Design (Balanced, space-efficient)
-"""
+
+      cvbuilder-telegram-bot/
+      ├── .env                  # Local environment variables (e.g., API keys, bot tokens) — NEVER commit this file
+      ├── .gitignore            # Specifies files and directories Git should ignore (e.g., .env, __pycache__)
+      ├── requirements.txt      # Python package dependencies with pinned versions
+      ├── main.py               # Main entry point: initializes the bot, sets up the dispatcher, and polling
+      ├── config.py             # Centralized configuration: environment loading, constants, templates, section mappings
+      ├── handlers.py           # Telegram handlers: commands (/start, /help), message responses, button callbacks
+      ├── flows.py              # Business logic: CV creation flows (create from scratch, upload existing CV)
+      ├── gemini_service.py     # Service layer for Google Gemini API: prompt construction, response parsing
+      ├── pdf_service.py        # Service layer for PDF generation: renders HTML templates with Jinja2 + WeasyPrint
+      ├── utils.py              # Utility functions: inline keyboards, text cleaning, temporary file management
+      ├── schemas.py            # Pydantic models: strict data validation and serialization of user CV data
+      └── templates/            # HTML/CSS templates for generating beautiful, customizable CVs
+          ├── template_1.html   # Modern Minimalist Design (Single-column layout)
+          ├── template_2.html   # Classic Professional Design (Traditional resume style)
+          └── template_3.html   # Clean Two-Column Design (Balanced, space-efficient)
+
 
 ## License
 
