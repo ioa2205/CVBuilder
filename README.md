@@ -1,4 +1,4 @@
-# CVBuilder Telegram Bot
+# [CVBuilder Telegram Bot](https://t.me/cv_builderbot)
 
 A Telegram bot designed to help users create professional, minimalist, and visually appealing CVs (Resumes). Users can either upload an existing CV (PDF/DOCX) for intelligent parsing via the Google Gemini API or create one from scratch through a guided question-and-answer process. The final CV is rendered into a PDF using pre-defined, stylish HTML/CSS templates.
 
