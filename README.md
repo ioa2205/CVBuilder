@@ -1,12 +1,12 @@
 # CVBuilder Telegram Bot
 
-A Telegram bot designed to help users create professional, minimalist, and visually appealing CVs (Resumes). Users can either upload an existing CV (PDF/DOCX) for intelligent parsing via the Google Gemini API or create one from scratch through a guided question-and-answer process. The final CV is rendered into a PDF using a selection of pre-defined, stylish HTML/CSS templates.
+A Telegram bot designed to help users create professional, minimalist, and visually appealing CVs (Resumes). Users can either upload an existing CV (PDF/DOCX) for intelligent parsing via the Google Gemini API or create one from scratch through a guided question-and-answer process. The final CV is rendered into a PDF using pre-defined, stylish HTML/CSS templates.
 
 ## Features
 
-*   **CV Creation from Upload:** Parses uploaded PDF or DOCX files using the Gemini API to extract structured information (Contact, Summary, Experience, Education, Skills).
+*   **CV Creation from Upload:** Parses uploaded PDF or DOCX files using the Gemini API to extract structured information (Contact, Summary, Experience, Education, Skills, and others).
 *   **CV Creation from Scratch:** Guides users through a conversational Q&A flow to collect CV details section by section.
-*   **Template Selection:** Offers multiple pre-defined, professional HTML/CSS templates for the final PDF output.
+*   **Template Selection:** This option offers multiple pre-defined, professional HTML/CSS templates for the final PDF output.
 *   **PDF Generation:** Renders the structured CV data into a chosen template, producing a high-quality PDF file.
 *   **Minimalist Interface:** Focuses on a clean and intuitive user experience within the Telegram chat interface.
 *   **State Management:** Remembers user progress during the multi-step creation process (using Redis or file-based persistence).
