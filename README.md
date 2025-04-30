@@ -137,10 +137,10 @@ Before you begin, ensure you have the following installed:
 ## Folder Structure (Key Files)
 
 cvbuilder-telegram-bot/
-├── .env                  # Local environment variables (e.g., API keys, bot tokens) — NEVER commit this file
+├── .env                   # Local environment variables (e.g., API keys, bot tokens) — NEVER commit this file
 ├── .gitignore             # Specifies files and directories Git should ignore (e.g., .env, __pycache__)
 ├── requirements.txt       # Python package dependencies with pinned versions
-├── main.py                # Main entry point: initializes the bot, sets up dispatcher and polling
+├── main.py                # Main entry point: initializes the bot, sets up dispatcher, and polling
 ├── config.py              # Centralized configuration: environment loading, constants, templates, section mappings
 ├── handlers.py            # Telegram handlers: commands (/start, /help), message responses, button callbacks
 ├── flows.py               # Business logic: CV creation flows (create from scratch, upload existing CV)
