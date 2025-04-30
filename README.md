@@ -52,10 +52,10 @@ Before you begin, ensure you have the following installed:
 
 1.  **Clone the Repository (or Download Files):**
     ```bash
-    git clone <your-repository-url>
+    git clone https://github.com/ioa2205/CVBuilder.git
     cd cvbuilder-telegram-bot
     ```
-    Or download the ZIP and extract it. Navigate to the project directory (`cvbuilder-telegram-bot`).
+    Or download the ZIP and extract it.
 
 2.  **Install WeasyPrint System Dependencies:** Make sure you have completed this step from the "Prerequisites" section above for your operating system.
 
@@ -137,21 +137,21 @@ Before you begin, ensure you have the following installed:
 ## Folder Structure (Key Files)
 
 cvbuilder-telegram-bot/
-├── .env # Local environment variables (API Keys - DO NOT COMMIT)
-├── .gitignore # Specifies intentionally untracked files that Git should ignore
-├── requirements.txt # Python package dependencies
-├── main.py # Main application entry point, sets up bot and runs it
-├── config.py # Loads configuration, defines constants (sections, templates)
-├── handlers.py # Defines how the bot responds to commands, messages, callbacks
-├── flows.py # Contains the logic for the CV creation flows (scratch/upload)
-├── gemini_service.py # Handles interaction with the Google Gemini API
-├── pdf_service.py # Handles HTML template rendering and PDF generation via WeasyPrint
-├── utils.py # Utility functions (keyboards, text extraction, cleanup)
-├── schemas.py # Pydantic models defining the structure of the CV data
-└── templates/ # Directory containing HTML/CSS templates for PDF generation
-├── template_1.html # Example: Modern Minimalist Template
-├── template_2.html # Example: Classic Professional Template
-└── template_3.html # Example: Clean Two-Column Template
+├── .env                  # Local environment variables (e.g., API keys, bot tokens) — NEVER commit this file
+├── .gitignore             # Specifies files and directories Git should ignore (e.g., .env, __pycache__)
+├── requirements.txt       # Python package dependencies with pinned versions
+├── main.py                # Main entry point: initializes the bot, sets up dispatcher and polling
+├── config.py              # Centralized configuration: environment loading, constants, templates, section mappings
+├── handlers.py            # Telegram handlers: commands (/start, /help), message responses, button callbacks
+├── flows.py               # Business logic: CV creation flows (create from scratch, upload existing CV)
+├── gemini_service.py      # Service layer for Google Gemini API: prompt construction, response parsing
+├── pdf_service.py         # Service layer for PDF generation: renders HTML templates with Jinja2 + WeasyPrint
+├── utils.py               # Utility functions: inline keyboards, text cleaning, temporary file management
+├── schemas.py             # Pydantic models: strict data validation and serialization of user CV data
+└── templates/             # HTML/CSS templates for generating beautiful, customizable CVs
+    ├── template_1.html    # Modern Minimalist Design (Single-column layout)
+    ├── template_2.html    # Classic Professional Design (Traditional resume style)
+    └── template_3.html    # Clean Two-Column Design (Balanced, space-efficient)
 
 ## License
 
