@@ -35,9 +35,7 @@ def get_parsing_prompt(cv_text: str) -> str:
     """Creates the prompt for Gemini to parse CV text."""
 
     # Define the desired JSON schema structure within the prompt
-    # This helps Gemini understand the target output format.
-    # Using the Pydantic schema definition directly can be helpful.
-    schema_description = CVData.model_json_schema()
+    schema_description = CVData.model_json_schema() # This automatically includes the new sections
 
     prompt = f"""
     Analyze the following CV text and extract the information into a structured JSON object.
@@ -48,17 +46,21 @@ def get_parsing_prompt(cv_text: str) -> str:
     ---
 
     **Instructions:**
-    1.  Extract the following sections: Contact Information, Summary, Work Experience, Education, Skills.
-    2.  For Work Experience and Education, create a list of objects, one for each job or degree.
-    3.  For skills, try to categorize them if possible (e.g., "Programming Languages", "Tools"), otherwise provide a flat list. The desired category structure is: [{{"category": "...", "skills_list": ["...", "..."]}}, ...]. If categorization is not clear, use a single category like "Technical Skills" or "Other Skills".
-    4.  Format dates consistently if possible (e.g., YYYY-MM or Month YYYY), but preserve original if unclear. Use "Present" for current roles/studies if indicated.
-    5.  For work experience descriptions, provide a list of strings, where each string is a bullet point or responsibility statement.
-    6.  If a section is clearly missing in the text, omit it from the JSON or represent it as null/empty list as appropriate based on the schema.
-    7.  **Output MUST be a valid JSON object conforming to this Pydantic schema:**
+    1.  Extract the relevant information for the following sections if present: Contact Information (`contact_info`), Summary (`summary`), Work Experience (`work_experience`), Education (`education`), Skills (`skills`), Projects (`projects`), Languages (`languages`), Certifications (`certifications`), Awards (`awards`).
+    2.  For `work_experience`, `education`, `projects`, `languages`, `certifications`, and `awards`, create a list of objects, one for each distinct item found in the text.
+    3.  For `skills`, structure them as a list of objects: `[{{"category": "...", "skills_list": ["...", "..."]}}]`. Attempt categorization (e.g., "Programming Languages", "Software", "Databases", "Soft Skills", "Languages"). If unsure, use a general category like "Technical Skills" or "Other Skills".
+    4.  For `languages`, extract the language name and proficiency level (e.g., Native, Fluent, Conversational, Basic).
+    5.  For `projects`, include name, description, technologies used, and URL if available.
+    6.  For `certifications`, include name, issuing body, issue date, and credential URL/ID if available.
+    7.  For `awards`, include name, organization, and date.
+    8.  Format dates consistently if possible (e.g., YYYY-MM or Month YYYY), but preserve original if unclear. Use "Present" for current roles.
+    9.  For descriptions (work experience, projects), provide a list of strings or a single string where appropriate based on the schema.
+    10. If a section is clearly missing in the text, omit its key from the JSON or represent it as `null` or an empty list (`[]`) as appropriate based on the schema definition.
+    11. **Output MUST be a valid JSON object conforming strictly to this Pydantic schema:**
         ```json
         {schema_description}
         ```
-    8.  Do NOT include any introductory text, explanations, or markdown formatting around the JSON output. Only output the JSON object itself.
+    12. Do NOT include any introductory text, explanations, comments, or markdown formatting (like ```json) around the JSON output. Only output the raw, valid JSON object itself.
 
     **JSON Output:**
     """

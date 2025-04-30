@@ -76,8 +76,8 @@ def main():
         ApplicationBuilder()
         .token(config.TELEGRAM_BOT_TOKEN)
         .persistence(persistence)
-        .read_timeout(30)  # Increase if needed for long operations
-        .write_timeout(30) # Increase if needed for sending large files
+        .read_timeout(100)  # Increase if needed for long operations
+        .write_timeout(100) # Increase if needed for sending large files
         .build()
     )
 

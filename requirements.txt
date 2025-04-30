@@ -3,7 +3,9 @@ redis==5.0.1
 google-generativeai
 python-dotenv==1.0.0
 pydantic==2.7.1
-WeasyPrint==60.1
+WeasyPrint==59.0
 Jinja2==3.1.2
 python-docx==1.1.0
 PyPDF2==3.0.1
+pydantic[email]
+pydyf==0.6.0

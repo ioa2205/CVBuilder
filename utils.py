@@ -71,24 +71,41 @@ def extract_text_from_docx(file_content: bytes) -> str:
 async def cleanup_user_data(context: ContextTypes.DEFAULT_TYPE):
     """Clears user-specific data from context after completion or cancellation."""
     user_data = context.user_data
+    # Keep state and cv_data if user might want to edit or retry template later?
+    # For now, clear everything as before on explicit restart or completion.
     keys_to_clear = ['state', 'cv_data', 'current_section_index', 'temp_file_id', 'temp_file_type']
-    for key in keys_to_clear:
-        if key in user_data:
+    # Remove 'scratch_data_buffer' if it's no longer used
+    if 'scratch_data_buffer' in keys_to_clear:
+        keys_to_clear.remove('scratch_data_buffer')
+
+    user_id = "N/A"
+    try:
+        user_id = context._user_id # Attempt to get user ID for logging
+    except AttributeError:
+         pass # May not always be available depending on context source
+
+    # Create a copy of keys to avoid modifying dict during iteration
+    for key in list(user_data.keys()):
+        if key in keys_to_clear:
             del user_data[key]
-    logger.info(f"Cleaned up data for user {context._user_id}")
+    logger.info(f"Cleaned up data for user {user_id}")
+
 
 
 def format_data_for_review(cv_data: dict) -> str:
     """ Formats the extracted CV data into a readable string for user review. """
-    review_text = "📄 *Please review the extracted information:*\n\n"
+    review_text = "📄 *Please review the collected information:*\n\n"
 
+    # Use .get() extensively to avoid errors if a section is missing/None
     if cv_data.get('contact_info'):
         review_text += "*Contact Info:*\n"
         ci = cv_data['contact_info']
         review_text += f"  Name: {ci.get('full_name', 'N/A')}\n"
         review_text += f"  Email: {ci.get('email', 'N/A')}\n"
         review_text += f"  Phone: {ci.get('phone', 'N/A')}\n"
-        review_text += f"  LinkedIn: {ci.get('linkedin_url', 'N/A')}\n\n" # Add others if extracted
+        review_text += f"  LinkedIn: {ci.get('linkedin_url', 'N/A')}\n"
+        review_text += f"  Portfolio: {ci.get('portfolio_url', 'N/A')}\n" # Added
+        review_text += f"  Address: {ci.get('address', 'N/A')}\n\n"       # Added
 
     if cv_data.get('summary'):
         review_text += f"*Summary:*\n{cv_data['summary']}\n\n"
@@ -96,35 +113,83 @@ def format_data_for_review(cv_data: dict) -> str:
     if cv_data.get('work_experience'):
         review_text += "*Work Experience:*\n"
         for i, job in enumerate(cv_data['work_experience']):
-            review_text += f"  *{i+1}. {job.get('job_title', 'N/A')}* at {job.get('company', 'N/A')}\n"
-            review_text += f"      ({job.get('start_date', 'N/A')} - {job.get('end_date', 'N/A')})\n"
-            # Optionally add description points
+            title = job.get('job_title', 'N/A')
+            company = job.get('company', 'N/A')
+            start = job.get('start_date', 'N/A')
+            end = job.get('end_date', 'N/A')
+            loc = f" ({job.get('location')})" if job.get('location') else ""
+            review_text += f"  *{i+1}. {title}* at {company}{loc}\n"
+            review_text += f"      ({start} - {end})\n"
+            # Optionally add description points here if needed for review
+            # if job.get('description'):
+            #    for point in job['description'][:2]: # Show first few points
+            #        review_text += f"      - {point}\n"
         review_text += "\n"
 
     if cv_data.get('education'):
         review_text += "*Education:*\n"
         for i, edu in enumerate(cv_data['education']):
-            review_text += f"  *{i+1}. {edu.get('degree', 'N/A')}* from {edu.get('institution', 'N/A')}\n"
-            review_text += f"      (Graduated: {edu.get('graduation_date', 'N/A')})\n"
+            degree = edu.get('degree', 'N/A')
+            inst = edu.get('institution', 'N/A')
+            grad_date = edu.get('graduation_date', 'N/A')
+            loc = f" ({edu.get('location')})" if edu.get('location') else ""
+            review_text += f"  *{i+1}. {degree}* from {inst}{loc}\n"
+            review_text += f"      (Graduated: {grad_date})\n"
+            if edu.get('details'):
+                review_text += f"      Details: {edu['details'][:100]}...\n" # Show snippet
         review_text += "\n"
 
     if cv_data.get('skills'):
         review_text += "*Skills:*\n"
-        # Simple list format example
-        skills_flat = []
         for skill_cat in cv_data['skills']:
-             if skill_cat.get('skills_list'):
-                 skills_flat.extend(skill_cat['skills_list'])
-        if skills_flat:
-             review_text += f"  - {', '.join(skills_flat)}\n"
-        else:
-             # Fallback if structure is different or just a list of strings was extracted
-             if isinstance(cv_data['skills'], list) and all(isinstance(s, str) for s in cv_data['skills']):
-                  review_text += f"  - {', '.join(cv_data['skills'])}\n"
+             category = skill_cat.get('category', 'General')
+             skills_list = skill_cat.get('skills_list', [])
+             if skills_list:
+                  review_text += f"  *{category}:* {', '.join(skills_list)}\n"
+        review_text += "\n"
+
+    # --- Add new sections to review format ---
+    if cv_data.get('projects'):
+        review_text += "*Projects:*\n"
+        for i, proj in enumerate(cv_data['projects']):
+            name = proj.get('project_name', 'N/A')
+            desc = proj.get('description', '')[:100] + '...' if proj.get('description') else 'N/A'
+            tech = f" (Tech: {', '.join(proj.get('technologies',[]))})" if proj.get('technologies') else ""
+            review_text += f"  *{i+1}. {name}*{tech}\n"
+            review_text += f"      Desc: {desc}\n"
+            if proj.get('project_url'):
+                 review_text += f"      URL: {proj.get('project_url')}\n"
+        review_text += "\n"
+
+    if cv_data.get('languages'):
+        review_text += "*Languages:*\n"
+        lang_list = [f"{lang.get('language','?')} ({lang.get('proficiency','?')})" for lang in cv_data['languages']]
+        if lang_list:
+            review_text += f"  - {', '.join(lang_list)}\n"
+        review_text += "\n"
+
+    if cv_data.get('certifications'):
+        review_text += "*Certifications:*\n"
+        for i, cert in enumerate(cv_data['certifications']):
+            name = cert.get('name', 'N/A')
+            org = cert.get('issuing_organization', 'N/A')
+            date = cert.get('issue_date', 'N/A')
+            review_text += f"  *{i+1}. {name}* from {org} ({date})\n"
+            # Optionally add URL/ID if present
+        review_text += "\n"
+
+    if cv_data.get('awards'):
+        review_text += "*Awards:*\n"
+        for i, award in enumerate(cv_data['awards']):
+            name = award.get('name', 'N/A')
+            org = award.get('organization', 'N/A')
+            date = award.get('date', 'N/A')
+            review_text += f"  *{i+1}. {name}* from {org} ({date})\n"
+        review_text += "\n"
 
     # Truncate if too long for Telegram message limits
     max_len = 4000 # Slightly less than max 4096
     if len(review_text) > max_len:
-        review_text = review_text[:max_len] + "\n\n... (output truncated)"
+        review_text = review_text[:max_len] + "\n\n... (output truncated, full data saved)"
 
     return review_text

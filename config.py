@@ -15,16 +15,23 @@ if not GEMINI_API_KEY:
     raise ValueError("Missing environment variable: GEMINI_API_KEY")
 
 # Define CV sections for the "From Scratch" flow
+
 CV_SECTIONS = [
     "contact_info.full_name",
     "contact_info.email",
     "contact_info.phone",
-    "contact_info.linkedin_url", # Optional field example
+    "contact_info.linkedin_url",
+    "contact_info.address",      # Added address
     "summary",
-    "work_experience", # Will need special handling for multiple entries
-    "education",       # Will need special handling for multiple entries
-    "skills",          # Will need special handling for list
-]
+    "work_experience", # Multi-entry
+    "education",       # Multi-entry
+    "skills",          # Special handling (list/categorized)
+    "projects",        # Multi-entry
+    "languages",       # Multi-entry
+    "certifications",  # Multi-entry
+    "awards",          # Multi-entry
+]    # Will need special handling for list
+
 
 # Template Definitions (Maps internal name to display name and filename)
 TEMPLATES = {
