@@ -1,7 +1,6 @@
 from pydantic import BaseModel, Field, EmailStr, HttpUrl
 from typing import List, Optional
 
-# Use Pydantic V2 features
 
 class ContactInfo(BaseModel):
     full_name: Optional[str] = Field(None, description="Full name of the candidate")
@@ -61,11 +60,10 @@ class CVData(BaseModel):
     work_experience: Optional[List[WorkExperienceItem]] = Field(None)
     education: Optional[List[EducationItem]] = Field(None)
     skills: Optional[List[SkillItem]] = Field(None)
-    projects: Optional[List[ProjectItem]] = Field(None) # Added
-    languages: Optional[List[LanguageItem]] = Field(None) # Added
-    certifications: Optional[List[CertificationItem]] = Field(None) # Added
-    awards: Optional[List[AwardItem]] = Field(None) # Added
-    # Add other sections as needed (e.g., publications, references)
+    projects: Optional[List[ProjectItem]] = Field(None) 
+    languages: Optional[List[LanguageItem]] = Field(None)
+    certifications: Optional[List[CertificationItem]] = Field(None)
+    awards: Optional[List[AwardItem]] = Field(None) 
 
     class Config:
         str_strip_whitespace = True

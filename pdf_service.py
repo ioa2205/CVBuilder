@@ -9,13 +9,11 @@ from config import TEMPLATES
 logger = logging.getLogger(__name__)
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
-# Create Jinja2 environment (cache templates in production)
 env = Environment(
     loader=FileSystemLoader(TEMPLATE_DIR),
     autoescape=select_autoescape(['html', 'xml'])
 )
-# Configure fonts for WeasyPrint (optional, if defaults aren't enough or you need custom fonts)
-# font_config = FontConfiguration()
+
 
 async def generate_cv_pdf(cv_data: CVData, template_key: str) -> Optional[bytes]:
     """Generates a PDF CV using WeasyPrint and Jinja2."""
@@ -33,15 +31,13 @@ async def generate_cv_pdf(cv_data: CVData, template_key: str) -> Optional[bytes]
     try:
         template = env.get_template(template_filename)
         
-        rendered_html = template.render(cv=cv_data) # Pass data under 'cv' key
+        rendered_html = template.render(cv=cv_data) 
 
         logger.info(f"Rendering PDF using template: {template_filename}")
         
-        # Create HTML object
         html = HTML(string=rendered_html, base_url=str(TEMPLATE_DIR))
 
-        # Generate PDF bytes
-        # Pass font_config=font_config if using custom font configuration
+
         pdf_bytes = html.write_pdf()
 
         logger.info(f"Successfully generated PDF for template {template_key}")

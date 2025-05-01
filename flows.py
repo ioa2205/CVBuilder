@@ -3,22 +3,19 @@ from telegram import Update, InputFile
 from telegram.ext import ContextTypes
 from telegram.constants import ParseMode
 import io
-from typing import Optional, List, Dict, Any # Added Dict, Any, List
+from typing import Optional, List, Dict, Any 
 import config
 import utils
 import gemini_service
 import pdf_service
-# Import all schemas explicitly for clarity
 from schemas import CVData, ContactInfo, WorkExperienceItem, EducationItem, SkillItem, ProjectItem, LanguageItem, CertificationItem, AwardItem
 logger = logging.getLogger(__name__)
 
-# --- Scratch Flow ---
 
 async def start_scratch_flow(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Initiates the CV creation from scratch."""
-    await utils.cleanup_user_data(context) # Clear previous state first
+    await utils.cleanup_user_data(context) 
     context.user_data['state'] = config.STATE_SCRATCH_START
-    # Initialize with structure expected by Pydantic later (using nested dicts)
     context.user_data['cv_data'] = {
         "contact_info": {},
         "summary": None,
@@ -31,8 +28,7 @@ async def start_scratch_flow(update: Update, context: ContextTypes.DEFAULT_TYPE)
         "awards": []
     }
     context.user_data['current_section_index'] = 0
-    # No longer need scratch_data_buffer if we add directly to cv_data lists
-    # context.user_data['scratch_data_buffer'] = {}
+
 
     await ask_next_scratch_question(update, context)
 
@@ -51,16 +47,13 @@ async def ask_next_scratch_question(update: Update, context: ContextTypes.DEFAUL
     section_key, section_readable, idx = _get_current_section_details(context)
 
     if section_key is None:
-        # All sections done, move to review
         await transition_to_review(update, context)
         return
 
     prompt_text = f"📝 Please provide information for: *{section_readable}*"
 
-    # --- Add detailed prompts for new sections ---
     if section_key == "work_experience":
         prompt_text += "\n\n*Format for each job:*\n`Title` at `Company` (`Start Date` - `End Date`)\nOptional: Location on next line\n- Responsibility 1\n- Responsibility 2\n\nType 'DONE' when finished adding jobs."
-        # Initialize list if not present (safety check)
         context.user_data['cv_data'].setdefault('work_experience', [])
     elif section_key == "education":
         prompt_text += "\n\n*Format for each degree:*\n`Degree` from `Institution` (`Graduation Date`)\nOptional: Location on next line\nOptional details on next line.\n\nType 'DONE' when finished adding degrees."
@@ -90,20 +83,17 @@ async def ask_next_scratch_question(update: Update, context: ContextTypes.DEFAUL
 
 
     context.user_data['state'] = config.STATE_SCRATCH_AWAIT_DATA
-    # Use effective_message for potential edits later if needed
     if update.effective_message:
         await update.effective_message.reply_text(prompt_text, parse_mode=ParseMode.MARKDOWN)
     elif update.callback_query and update.callback_query.message:
-         # If called after a button press (like skipping a section in future)
          await update.callback_query.message.reply_text(prompt_text, parse_mode=ParseMode.MARKDOWN)
 
 async def handle_scratch_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Processes user input during the scratch flow."""
     if not update.message or not update.message.text:
         logger.warning("Received non-text message or empty message in handle_scratch_input")
-        # Maybe prompt again? Or ignore? Let's prompt again gently.
         await update.effective_message.reply_text("Please provide the requested information as text.")
-        await ask_next_scratch_question(update, context) # Re-ask current question
+        await ask_next_scratch_question(update, context) 
         return
 
     user_input = update.message.text
@@ -133,11 +123,7 @@ async def handle_scratch_input(update: Update, context: ContextTypes.DEFAULT_TYP
             except Exception as e:
                 logger.error(f"Failed to parse {section_list_key} input: {e}\nInput: {user_input}", exc_info=True)
                 await update.effective_message.reply_text("Sorry, there was an error processing that input. Please check the format and try again, or type 'DONE'.")
-        # For multi-entry, always return to wait for next entry or 'DONE'
-        return True # Indicates flow should pause for next input
-
-    # --- Define Simple Parsers for Multi-Entry (Example Implementation) ---
-    # These need to be robust or replaced with asking field-by-field later
+        return True 
 
     def parse_work_experience(text: str) -> Optional[Dict[str, Any]]:
         lines = [line.strip() for line in text.split('\n') if line.strip()]
@@ -154,7 +140,7 @@ async def handle_scratch_input(update: Update, context: ContextTypes.DEFAULT_TYP
                 start_date, end_date = [d.strip() for d in date_str.split(' - ', 1)]
                 item['start_date'] = start_date
                 item['end_date'] = end_date
-            else: # Handle single date case if needed, or assume start date if only one provided
+            else:
                  item['start_date'] = date_str # Or handle error
 
             desc_lines = []
@@ -163,11 +149,9 @@ async def handle_scratch_input(update: Update, context: ContextTypes.DEFAULT_TYP
                  item['location'] = lines[loc_line]
                  desc_lines = lines[loc_line+1:]
             else:
-                 desc_lines = lines[1:] # If no location, desc starts from line 2
+                 desc_lines = lines[1:] 
 
             item['description'] = [line.lstrip('- ') for line in desc_lines if line.startswith('-')]
-            # Add non-bullet points as description too? Depends on desired strictness
-            # item['description'] = [line.lstrip('- ') for line in desc_lines]
 
             return item
         except IndexError: # Handle cases where split fails
@@ -182,7 +166,6 @@ async def handle_scratch_input(update: Update, context: ContextTypes.DEFAULT_TYP
         if not lines: return None
         item = EducationItem().model_dump()
         try:
-            # "Degree from Institution (Grad Date)"
             first_line_parts = lines[0].split(' from ')
             item['degree'] = first_line_parts[0].strip()
             inst_date_parts = first_line_parts[1].split('(')
@@ -207,7 +190,6 @@ async def handle_scratch_input(update: Update, context: ContextTypes.DEFAULT_TYP
             return None
 
     def parse_project(text: str) -> Optional[Dict[str, Any]]:
-         # Parses based on the "Key: Value" format provided in the prompt
         lines = [line.strip() for line in text.split('\n') if line.strip()]
         if not lines: return None
         item = ProjectItem().model_dump()
@@ -228,7 +210,6 @@ async def handle_scratch_input(update: Update, context: ContextTypes.DEFAULT_TYP
         return item
 
     def parse_language(text: str) -> Optional[Dict[str, Any]]:
-         # "Language - Proficiency"
          parts = [p.strip() for p in text.split('-', 1)]
          if len(parts) == 2:
              item = LanguageItem().model_dump()
@@ -292,7 +273,6 @@ async def handle_scratch_input(update: Update, context: ContextTypes.DEFAULT_TYP
         should_pause = await process_multi_entry('awards', parse_award)
 
     elif section_key == "skills":
-        # Handle potentially categorized input: "Category: Skill1, Skill2" or just "Skill1, Skill2"
         lines = [line.strip() for line in user_input.split('\n') if line.strip()]
         parsed_skills = []
         for line in lines:
@@ -302,7 +282,6 @@ async def handle_scratch_input(update: Update, context: ContextTypes.DEFAULT_TYP
                   if skills_list:
                        parsed_skills.append(SkillItem(category=category.strip(), skills_list=skills_list).model_dump())
              else:
-                  # Assume general category if no colon
                   skills_list = [s.strip() for s in line.split(',') if s.strip()]
                   if skills_list:
                        # Check if a 'General' category already exists to append
@@ -320,36 +299,27 @@ async def handle_scratch_input(update: Update, context: ContextTypes.DEFAULT_TYP
              cv_data['skills'] = parsed_skills # Replace previous simple list/structure
              context.user_data['current_section_index'] += 1
         else:
-             # Handle case where input was provided but couldn't be parsed into skills
              await update.effective_message.reply_text("Couldn't parse any skills from your input. Please use comma-separated format, optionally with 'Category: Skill1, Skill2'.")
-             # Don't advance index, re-ask the question implicitly next time
 
-    # --- Handling simple sections (Contact Info, Summary) ---
     elif section_key == "summary":
         cv_data['summary'] = user_input.strip()
         context.user_data['current_section_index'] += 1
     elif section_key.startswith("contact_info."):
-        # Already initialized as dict in start_scratch_flow
         field_key = section_key.split('.')[-1]
         cv_data.setdefault('contact_info', {})[field_key] = user_input.strip()
         context.user_data['current_section_index'] += 1
     else:
-        # Fallback for any potentially missed simple section key
         logger.warning(f"Unhandled simple section key in handle_scratch_input: {section_key}")
-        # Store it flatly for now, might cause validation issues later
         cv_data[section_key] = user_input.strip()
         context.user_data['current_section_index'] += 1
 
 
-    # --- Advance to next question or review ---
-    if not should_pause: # Only advance if not waiting for more multi-entry items
+    if not should_pause: 
         next_section_key, _, next_idx = _get_current_section_details(context) # Check state *after* potential index increment
         if next_section_key is None:
              await transition_to_review(update, context)
         else:
              await ask_next_scratch_question(update, context)
-
-# --- Upload Flow ---
 
 async def request_upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Asks the user to upload their CV file."""
@@ -376,7 +346,7 @@ async def handle_cv_upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         file = await context.bot.get_file(doc.file_id)
         file_bytes = await file.download_as_bytearray()
-        file_content = bytes(file_bytes) # Convert bytearray to bytes
+        file_content = bytes(file_bytes) 
 
         text = ""
         if doc.mime_type == "application/pdf":
@@ -389,11 +359,9 @@ async def handle_cv_upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await utils.cleanup_user_data(context)
             return
 
-        # Call Gemini service
         parsed_data: Optional[CVData] = await gemini_service.parse_cv_text_with_gemini(text)
 
         if parsed_data:
-            # Store the validated Pydantic model's dictionary representation
             context.user_data['cv_data'] = parsed_data.model_dump(mode='json', exclude_unset=True) # Store as dict
             await transition_to_review(update, context)
         else:
@@ -405,37 +373,8 @@ async def handle_cv_upload(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.effective_message.reply_text("An error occurred while processing your file. Please try again later.")
         await utils.cleanup_user_data(context)
 
-
-# --- Common Flow Steps ---
-
-# def structure_scratch_data(raw_data: dict) -> dict:
-#      """Converts the flat data collected during scratch flow into nested structure."""
-#      # This is where you'd map {"contact_info.full_name": "..."} to {"contact_info": {"full_name": "..."}}
-#      # And ensure work_experience/education/skills are lists of dicts/objects
-#      # For simplicity in this example, assume the structure is already somewhat nested,
-#      # but validation will happen later.
-#      # A more robust implementation would use the keys like "contact_info.full_name"
-#      # to build the nested dict properly.
-#      # Let's assume handle_scratch_input already created a basic nested structure.
-#      structured = {}
-#      if 'contact_info' in raw_data:
-#           structured['contact_info'] = raw_data['contact_info']
-#      if 'summary' in raw_data:
-#            structured['summary'] = raw_data['summary']
-#      if 'work_experience' in raw_data and isinstance(raw_data['work_experience'], list):
-#            structured['work_experience'] = raw_data['work_experience']
-#      if 'education' in raw_data and isinstance(raw_data['education'], list):
-#            structured['education'] = raw_data['education']
-#      if 'skills' in raw_data and isinstance(raw_data['skills'], list):
-#           structured['skills'] = raw_data['skills'] # Assumes simple structure was saved
-
-#      # logger.debug(f"Structured scratch data: {structured}")
-#      return structured
-
 async def transition_to_review(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Formats data and asks the user to review."""
-    # Data should already be structured correctly in context.user_data['cv_data']
-    # from both scratch and upload flows.
     cv_data_dict = context.user_data.get('cv_data', {})
 
     if not cv_data_dict:
@@ -444,30 +383,25 @@ async def transition_to_review(update: Update, context: ContextTypes.DEFAULT_TYP
         await utils.cleanup_user_data(context)
         return
 
-    # Validate the dictionary using Pydantic before showing to user
     try:
          logger.debug(f"Data before validation in transition_to_review: {cv_data_dict}")
-         # Ensure default values are handled correctly if keys are missing
          validated_data = CVData.model_validate(cv_data_dict)
-         # Store the validated dict representation again (includes defaults from Pydantic model)
          context.user_data['cv_data'] = validated_data.model_dump(mode='json', exclude_unset=True)
          logger.debug(f"Data after validation and dump: {context.user_data['cv_data']}")
-    except Exception as e: # Catch Pydantic's ValidationError specifically if needed
+    except Exception as e: 
          logger.error(f"Data validation failed before review: {e}\nData: {cv_data_dict}", exc_info=True)
          await update.effective_message.reply_text(f"There was an issue validating the collected data. Please try starting over.\nError details (for debugging): {e}")
          await utils.cleanup_user_data(context)
          return
 
     context.user_data['state'] = config.STATE_REVIEWING_DATA
-    review_text = utils.format_data_for_review(context.user_data['cv_data']) # Pass the validated data
+    review_text = utils.format_data_for_review(context.user_data['cv_data']) 
     keyboard = utils.create_confirmation_keyboard("review")
 
-    # Use effective_message to handle both callback query edits and direct messages
     message_func = None
     if update.callback_query:
         message_func = update.callback_query.edit_message_text
     elif update.effective_message:
-        # Send as new message if coming from direct text input
         message_func = update.effective_message.reply_text
 
     if message_func:
@@ -478,21 +412,18 @@ async def transition_to_review(update: Update, context: ContextTypes.DEFAULT_TYP
         )
     else:
          logger.error("Could not find method to send review message.")
-         # Fallback if somehow neither callback nor message is available
          await context.bot.send_message(chat_id=update.effective_chat.id, text="Please review the data:", reply_markup=keyboard)
          await context.bot.send_message(chat_id=update.effective_chat.id, text=review_text, parse_mode=ParseMode.MARKDOWN)
 
 async def handle_review_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE, confirmed: bool):
     """Handles the user's confirmation after reviewing the data."""
     query = update.callback_query
-    await query.answer() # Acknowledge callback
+    await query.answer() 
 
     if confirmed:
         await query.edit_message_text("Great! Now, let's choose a template.")
-        # Ensure we pass update object correctly if ask_template_selection expects it
-        await ask_template_selection(update, context) # Pass update here
+        await ask_template_selection(update, context) 
     else:
-        # V1: Just restart. Future: Implement editing.
         await query.edit_message_text("Okay, let's start over. Use /start to begin.")
         await utils.cleanup_user_data(context)
 
@@ -500,7 +431,6 @@ async def ask_template_selection(update: Update, context: ContextTypes.DEFAULT_T
     """Sends the template selection keyboard."""
     context.user_data['state'] = config.STATE_SELECTING_TEMPLATE
     keyboard = utils.create_template_selection_keyboard()
-    # Check if called from callback or message
     if update.callback_query:
          await update.callback_query.edit_message_text(
              "🎨 Choose a template style for your CV:",
@@ -533,7 +463,6 @@ async def handle_template_selection(update: Update, context: ContextTypes.DEFAUL
     await query.edit_message_text(f"✨ Generating your '{config.TEMPLATES[template_key]['name']}' CV... Please wait.")
     context.user_data['state'] = config.STATE_GENERATING_PDF
 
-    # Validate data again just before PDF generation (optional but safe)
     try:
         cv_data_model = CVData.model_validate(cv_data_dict)
     except Exception as e:
@@ -553,17 +482,14 @@ async def handle_template_selection(update: Update, context: ContextTypes.DEFAUL
                 document=pdf_file,
                 caption="✅ Here is your generated CV! ✨"
             )
-            await query.edit_message_text("✅ PDF generated and sent!") # Edit the "Generating..." message
+            await query.edit_message_text("✅ PDF generated and sent!")
         except Exception as e:
              logger.error(f"Failed to send PDF document: {e}", exc_info=True)
              await query.message.reply_text("I generated the PDF, but there was an error sending it. Please try generating again later.")
-             # Don't clean up data here, user might retry template selection
     else:
         await query.message.reply_text("😥 Sorry, there was an error creating the PDF for the selected template. You might try a different template or start over.")
-        # Keep state for retrying template selection
         context.user_data['state'] = config.STATE_SELECTING_TEMPLATE
-        await ask_template_selection(update, context) # Re-ask template selection
+        await ask_template_selection(update, context) 
 
-    # Clean up only after successful send (or maybe after explicit cancel/new start)
-    # For V1, we clean up after attempting to send.
+
     await utils.cleanup_user_data(context)

@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv() # Load environment variables from .env file
+load_dotenv() 
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -14,35 +14,31 @@ if not TELEGRAM_BOT_TOKEN:
 if not GEMINI_API_KEY:
     raise ValueError("Missing environment variable: GEMINI_API_KEY")
 
-# Define CV sections for the "From Scratch" flow
 
 CV_SECTIONS = [
     "contact_info.full_name",
     "contact_info.email",
     "contact_info.phone",
     "contact_info.linkedin_url",
-    "contact_info.address",      # Added address
+    "contact_info.address",     
     "summary",
-    "work_experience", # Multi-entry
-    "education",       # Multi-entry
-    "skills",          # Special handling (list/categorized)
-    "projects",        # Multi-entry
-    "languages",       # Multi-entry
-    "certifications",  # Multi-entry
-    "awards",          # Multi-entry
-]    # Will need special handling for list
+    "work_experience", 
+    "education",      
+    "skills",         
+    "projects",       
+    "languages",      
+    "certifications",  
+    "awards",          
+]
 
-
-# Template Definitions (Maps internal name to display name and filename)
 TEMPLATES = {
     "modern": {"name": "Modern Minimalist", "file": "template_1.html"},
     "classic": {"name": "Classic Professional", "file": "template_2.html"},
     "creative": {"name": "Creative Tech", "file": "template_3.html"},
 }
 
-# State Constants (optional, but good practice)
 STATE_START = "START"
-STATE_AWAITING_CHOICE = "AWAITING_CHOICE" # After /start
+STATE_AWAITING_CHOICE = "AWAITING_CHOICE" 
 STATE_SCRATCH_START = "SCRATCH_START"
 STATE_SCRATCH_AWAIT_DATA = "SCRATCH_AWAIT_DATA"
 STATE_UPLOAD_AWAIT_FILE = "UPLOAD_AWAIT_FILE"

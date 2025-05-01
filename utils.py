@@ -14,7 +14,6 @@ def create_main_menu_keyboard() -> InlineKeyboardMarkup:
     keyboard = [
         [InlineKeyboardButton("✨ Create New CV from Scratch", callback_data="create_scratch")],
         [InlineKeyboardButton("📄 Upload Existing CV (PDF/DOCX)", callback_data="create_upload")],
-        # [InlineKeyboardButton("✏️ Edit Previous CV (Not Implemented)", callback_data="edit_cv")], # Future feature
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -24,7 +23,6 @@ def create_confirmation_keyboard(callback_prefix: str) -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton("✅ Yes, looks good!", callback_data=f"{callback_prefix}_yes"),
             InlineKeyboardButton("❌ No, let me restart", callback_data=f"{callback_prefix}_no"), # Simple restart for V1 minimalism
-            # InlineKeyboardButton("✏️ Edit Section (Advanced)", callback_data=f"{callback_prefix}_edit"), # Future: Allow specific edits
         ]
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -35,12 +33,6 @@ def create_template_selection_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(f"{idx+1}. {details['name']}", callback_data=f"select_template_{key}")]
         for idx, (key, details) in enumerate(TEMPLATES.items())
     ]
-    # Add small image previews here if desired and feasible - requires hosting images
-    # Example:
-    # keyboard = [
-    #     [InlineKeyboardButton(f"Template 1", callback_data=f"select_template_modern")],
-    #     # Add image sending logic separately or use specific TG features if available
-    # ]
     return InlineKeyboardMarkup(keyboard)
 
 
@@ -71,13 +63,9 @@ def extract_text_from_docx(file_content: bytes) -> str:
 async def cleanup_user_data(context: ContextTypes.DEFAULT_TYPE):
     """Clears user-specific data from context after completion or cancellation."""
     user_data = context.user_data
-    # Keep state and cv_data if user might want to edit or retry template later?
-    # For now, clear everything as before on explicit restart or completion.
     keys_to_clear = ['state', 'cv_data', 'current_section_index', 'temp_file_id', 'temp_file_type']
-    # Remove 'scratch_data_buffer' if it's no longer used
     if 'scratch_data_buffer' in keys_to_clear:
         keys_to_clear.remove('scratch_data_buffer')
-
     user_id = "N/A"
     try:
         user_id = context._user_id # Attempt to get user ID for logging
@@ -120,10 +108,6 @@ def format_data_for_review(cv_data: dict) -> str:
             loc = f" ({job.get('location')})" if job.get('location') else ""
             review_text += f"  *{i+1}. {title}* at {company}{loc}\n"
             review_text += f"      ({start} - {end})\n"
-            # Optionally add description points here if needed for review
-            # if job.get('description'):
-            #    for point in job['description'][:2]: # Show first few points
-            #        review_text += f"      - {point}\n"
         review_text += "\n"
 
     if cv_data.get('education'):
@@ -148,7 +132,6 @@ def format_data_for_review(cv_data: dict) -> str:
                   review_text += f"  *{category}:* {', '.join(skills_list)}\n"
         review_text += "\n"
 
-    # --- Add new sections to review format ---
     if cv_data.get('projects'):
         review_text += "*Projects:*\n"
         for i, proj in enumerate(cv_data['projects']):
@@ -175,7 +158,6 @@ def format_data_for_review(cv_data: dict) -> str:
             org = cert.get('issuing_organization', 'N/A')
             date = cert.get('issue_date', 'N/A')
             review_text += f"  *{i+1}. {name}* from {org} ({date})\n"
-            # Optionally add URL/ID if present
         review_text += "\n"
 
     if cv_data.get('awards'):
@@ -187,8 +169,7 @@ def format_data_for_review(cv_data: dict) -> str:
             review_text += f"  *{i+1}. {name}* from {org} ({date})\n"
         review_text += "\n"
 
-    # Truncate if too long for Telegram message limits
-    max_len = 4000 # Slightly less than max 4096
+    max_len = 4000 
     if len(review_text) > max_len:
         review_text = review_text[:max_len] + "\n\n... (output truncated, full data saved)"
 

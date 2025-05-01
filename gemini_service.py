@@ -9,21 +9,12 @@ from schemas import CVData
 
 logger = logging.getLogger(__name__)
 
-# Configure the Gemini client (do this once)
 try:
     genai.configure(api_key=config.GEMINI_API_KEY)
-    # Optional: Set safety settings if needed
-    # safety_settings = [
-    #     {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_MEDIUM_AND_ABOVE"},
-    #     # ... other categories
-    # ]
     model = genai.GenerativeModel(
-        'gemini-2.5-pro-exp-03-25', # Use the appropriate model name
-        # safety_settings=safety_settings
+        'gemini-2.5-pro-exp-03-25',
         generation_config=genai.types.GenerationConfig(
-            # Ensure JSON output if model supports it directly, otherwise rely on prompt.
-             # response_mime_type="application/json" # Requires specific model support
-             temperature=0.2 # Lower temperature for more predictable structured output
+             temperature=0.2 
         )
     )
     logger.info("Gemini AI client configured successfully.")
@@ -34,8 +25,7 @@ except Exception as e:
 def get_parsing_prompt(cv_text: str) -> str:
     """Creates the prompt for Gemini to parse CV text."""
 
-    # Define the desired JSON schema structure within the prompt
-    schema_description = CVData.model_json_schema() # This automatically includes the new sections
+    schema_description = CVData.model_json_schema()
 
     prompt = f"""
     Analyze the following CV text and extract the information into a structured JSON object.
@@ -79,18 +69,10 @@ async def parse_cv_text_with_gemini(cv_text: str) -> Optional[CVData]:
     logger.info("Sending request to Gemini API for CV parsing...")
 
     try:
-        # Ensure we handle potential API errors during generation
-        response = await model.generate_content_async(prompt) # Use async if available & needed
+        response = await model.generate_content_async(prompt) 
 
-        # Debug: Log raw response
-        # logger.debug(f"Gemini Raw Response Parts: {response.parts}")
-        # logger.debug(f"Gemini Raw Response Text: {response.text}")
-
-        # Attempt to parse the JSON response
         try:
-            # Clean potential markdown code fences if present
             json_text = response.text.strip().removeprefix("```json").removesuffix("```").strip()
-            # Validate the parsed JSON against the Pydantic schema
             parsed_data = CVData.model_validate_json(json_text)
             logger.info("Successfully parsed and validated CV data from Gemini.")
             return parsed_data
@@ -106,8 +88,5 @@ async def parse_cv_text_with_gemini(cv_text: str) -> Optional[CVData]:
 
 
     except Exception as e:
-        # Catching broad exceptions from the API call itself
         logger.error(f"Error calling Gemini API: {e}", exc_info=True)
-        # Check for specific Gemini exceptions if the SDK provides them
-        # Example: if isinstance(e, google.api_core.exceptions.ResourceExhausted): ...
         return None

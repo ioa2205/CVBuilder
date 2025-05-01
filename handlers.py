@@ -19,7 +19,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Sends the welcome message and main menu."""
     user = update.effective_user
     logger.info(f"User {user.id} ({user.username}) started the bot.")
-    # Clear any previous state just in case
     await utils.cleanup_user_data(context)
     context.user_data['state'] = config.STATE_AWAITING_CHOICE
 
@@ -53,7 +52,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif user_state == config.STATE_UPLOAD_AWAIT_FILE:
          await update.message.reply_text("Please upload a file using the attachment button, or choose an option using /start.")
     elif user_state in [config.STATE_AWAITING_CHOICE, config.STATE_REVIEWING_DATA, config.STATE_SELECTING_TEMPLATE]:
-         # Usually expect button presses in these states
          await update.message.reply_text("Please use the buttons provided, or /start to begin again.")
     else:
         # Default handler or unexpected state
@@ -104,26 +102,20 @@ async def handle_callback_query(update: Update, context: ContextTypes.DEFAULT_TY
              await flows.handle_review_confirmation(update, context, confirmed)
         else:
              logger.warning("Received review callback in unexpected state.")
-             # Don't edit message if state is wrong, could be confusing
-             # await query.message.reply_text("Something went wrong with the state. Please use /start.")
 
-    # --- Template Selection ---
+
     elif callback_data.startswith("select_template_"):
          if user_state == config.STATE_SELECTING_TEMPLATE:
               template_key = callback_data.replace("select_template_", "")
               await flows.handle_template_selection(update, context, template_key)
          else:
               logger.warning("Received template selection callback in unexpected state.")
-              # await query.message.reply_text("Something went wrong with the state. Please use /start.")
-
-    # --- Catch other unexpected callbacks ---
     else:
         logger.warning(f"Unhandled callback query data: {callback_data}")
         try:
              # Try to inform user without editing if state is weird
              await query.message.reply_text("Sorry, I didn't understand that button press in this context.")
         except Exception:
-             # If message edit fails (e.g., message too old)
              pass
 
 
