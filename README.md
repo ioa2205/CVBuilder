@@ -1,12 +1,12 @@
-# CVBuilder Telegram Bot
+# [CVBuilder Telegram Bot](https://t.me/cv_builderbot)
 
-A Telegram bot designed to help users create professional, minimalist, and visually appealing CVs (Resumes). Users can either upload an existing CV (PDF/DOCX) for intelligent parsing via the Google Gemini API or create one from scratch through a guided question-and-answer process. The final CV is rendered into a PDF using a selection of pre-defined, stylish HTML/CSS templates.
+A Telegram bot designed to help users create professional, minimalist, and visually appealing CVs (Resumes). Users can either upload an existing CV (PDF/DOCX) for intelligent parsing via the Google Gemini API or create one from scratch through a guided question-and-answer process. The final CV is rendered into a PDF using pre-defined, stylish HTML/CSS templates.
 
 ## Features
 
-*   **CV Creation from Upload:** Parses uploaded PDF or DOCX files using the Gemini API to extract structured information (Contact, Summary, Experience, Education, Skills).
+*   **CV Creation from Upload:** Parses uploaded PDF or DOCX files using the Gemini API to extract structured information (Contact, Summary, Experience, Education, Skills, and others).
 *   **CV Creation from Scratch:** Guides users through a conversational Q&A flow to collect CV details section by section.
-*   **Template Selection:** Offers multiple pre-defined, professional HTML/CSS templates for the final PDF output.
+*   **Template Selection:** This option offers multiple pre-defined, professional HTML/CSS templates for the final PDF output.
 *   **PDF Generation:** Renders the structured CV data into a chosen template, producing a high-quality PDF file.
 *   **Minimalist Interface:** Focuses on a clean and intuitive user experience within the Telegram chat interface.
 *   **State Management:** Remembers user progress during the multi-step creation process (using Redis or file-based persistence).
@@ -136,22 +136,23 @@ Before you begin, ensure you have the following installed:
 
 ## Folder Structure (Key Files)
 
-cvbuilder-telegram-bot/
-├── .env                  # Local environment variables (e.g., API keys, bot tokens) — NEVER commit this file
-├── .gitignore             # Specifies files and directories Git should ignore (e.g., .env, __pycache__)
-├── requirements.txt       # Python package dependencies with pinned versions
-├── main.py                # Main entry point: initializes the bot, sets up dispatcher and polling
-├── config.py              # Centralized configuration: environment loading, constants, templates, section mappings
-├── handlers.py            # Telegram handlers: commands (/start, /help), message responses, button callbacks
-├── flows.py               # Business logic: CV creation flows (create from scratch, upload existing CV)
-├── gemini_service.py      # Service layer for Google Gemini API: prompt construction, response parsing
-├── pdf_service.py         # Service layer for PDF generation: renders HTML templates with Jinja2 + WeasyPrint
-├── utils.py               # Utility functions: inline keyboards, text cleaning, temporary file management
-├── schemas.py             # Pydantic models: strict data validation and serialization of user CV data
-└── templates/             # HTML/CSS templates for generating beautiful, customizable CVs
-    ├── template_1.html    # Modern Minimalist Design (Single-column layout)
-    ├── template_2.html    # Classic Professional Design (Traditional resume style)
-    └── template_3.html    # Clean Two-Column Design (Balanced, space-efficient)
+      cvbuilder-telegram-bot/
+      ├── .env                  # Local environment variables (e.g., API keys, bot tokens) — NEVER commit this file
+      ├── .gitignore            # Specifies files and directories Git should ignore (e.g., .env, __pycache__)
+      ├── requirements.txt      # Python package dependencies with pinned versions
+      ├── main.py               # Main entry point: initializes the bot, sets up the dispatcher, and polling
+      ├── config.py             # Centralized configuration: environment loading, constants, templates, section mappings
+      ├── handlers.py           # Telegram handlers: commands (/start, /help), message responses, button callbacks
+      ├── flows.py              # Business logic: CV creation flows (create from scratch, upload existing CV)
+      ├── gemini_service.py     # Service layer for Google Gemini API: prompt construction, response parsing
+      ├── pdf_service.py        # Service layer for PDF generation: renders HTML templates with Jinja2 + WeasyPrint
+      ├── utils.py              # Utility functions: inline keyboards, text cleaning, temporary file management
+      ├── schemas.py            # Pydantic models: strict data validation and serialization of user CV data
+      └── templates/            # HTML/CSS templates for generating beautiful, customizable CVs
+          ├── template_1.html   # Modern Minimalist Design (Single-column layout)
+          ├── template_2.html   # Classic Professional Design (Traditional resume style)
+          └── template_3.html   # Clean Two-Column Design (Balanced, space-efficient)
+
 
 ## License
 
