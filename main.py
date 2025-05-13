@@ -66,8 +66,8 @@ def main():
         ApplicationBuilder()
         .token(config.TELEGRAM_BOT_TOKEN)
         .persistence(persistence)
-        .read_timeout(100)  
-        .write_timeout(100) 
+        .read_timeout(150)  
+        .write_timeout(150) 
         .build()
     )
 
