@@ -1,6 +1,5 @@
 import logging
 import redis
-import os
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
@@ -8,7 +7,7 @@ from telegram.ext import (
     CallbackQueryHandler,
     filters,
     PicklePersistence, # Simple file-based persistence for easy start
-    RedisPersistence, # Use this for Redis-backed persistence
+    # RedisPersistence, # Use this for Redis-backed persistence
     BasePersistence,
 )
 from telegram.warnings import PTBUserWarning
@@ -22,78 +21,53 @@ warnings.filterwarnings("ignore", category=PTBUserWarning, message="State .* isn
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO 
+    level=logging.INFO
 )
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
 def create_persistence() -> BasePersistence:
-    """Creates the persistence object (Redis preferred for Railway)."""
+    """Creates the persistence object (Redis or Pickle)."""
     try:
-        # Read Railway's standard Redis environment variables
-        redis_host = os.getenv("REDISHOST")
-        redis_port_str = os.getenv("REDISPORT")
-        redis_password = os.getenv("REDISPASSWORD", None)
-        redis_db = int(os.getenv("REDISDB", config.REDIS_DB)) # Use REDISDB from env or fallback
+        # Requires a running Redis server configured in .env
+        redis_instance = redis.Redis(host=config.REDIS_HOST, port=config.REDIS_PORT, db=config.REDIS_DB, decode_responses=True)
+        redis_instance.ping() # Test connection
+        logger.info(f"Successfully connected to Redis at {config.REDIS_HOST}:{config.REDIS_PORT}")
 
-        if not redis_host or not redis_port_str:
-            logger.warning("REDISHOST or REDISPORT not found, falling back to PicklePersistence.")
-            return PicklePersistence(filepath="bot_persistence.pkl") # Fallback
-
-        redis_port = int(redis_port_str)
-
-        logger.info(f"Attempting to connect to Railway Redis at {redis_host}:{redis_port}")
-        redis_instance = redis.Redis(
-            host=redis_host,
-            port=redis_port,
-            password=redis_password,
-            db=redis_db,
-            decode_responses=True
-        )
-        redis_instance.ping()
-        logger.info(f"Successfully connected to Railway Redis.")
-        return RedisPersistence(redis_instance=redis_instance)
-
-    except (redis.exceptions.ConnectionError, ValueError, TypeError) as e:
-        logger.error(f"Could not connect to Railway Redis: {e}. Falling back to PicklePersistence.")
+        # --- OR Simple Pickle Persistence (Easier for testing, not recommended for prod) ---
+        # Stores data in a file named 'bot_persistence.pkl' (default)
+        logger.warning("Using PicklePersistence. State will be lost if the bot restarts without the file. Use RedisPersistence for production.")
         return PicklePersistence(filepath="bot_persistence.pkl")
+
+    except redis.exceptions.ConnectionError as e:
+         logger.error(f"Could not connect to Redis at {config.REDIS_HOST}:{config.REDIS_PORT}. Error: {e}")
+         logger.warning("Falling back to PicklePersistence. State will be lost on restart without the file.")
+         return PicklePersistence(filepath="bot_persistence.pkl")
     except Exception as e:
-        logger.error(f"Unexpected error setting up persistence: {e}. Falling back to PicklePersistence.")
-        return PicklePersistence(filepath="bot_persistence.pkl")
-
+         logger.error(f"Error setting up persistence: {e}", exc_info=True)
+         logger.warning("Falling back to PicklePersistence.")
+         return PicklePersistence(filepath="bot_persistence.pkl")
 
 def main():
+    """Starts the CVBuilder bot."""
     logger.info("Starting CVBuilder Bot...")
 
-    if not config.TELEGRAM_BOT_TOKEN or not config.GEMINI_API_KEY:
-        logger.critical("Missing TELEGRAM_BOT_TOKEN or GEMINI_API_KEY. Exiting.")
+    if not config.TELEGRAM_BOT_TOKEN:
+        logger.critical("TELEGRAM_BOT_TOKEN not found in environment variables. Exiting.")
+        return
+    if not config.GEMINI_API_KEY:
+        logger.critical("GEMINI_API_KEY not found in environment variables. Exiting.")
         return
 
     persistence = create_persistence()
-    telegram_timeout_config = {
-        'connect_timeout': 55.0,  # Seconds to establish a connection
-        'read_timeout': 55.0,     # Seconds to wait for a read response
-        'write_timeout': 55.0,    # Seconds to wait for a write operation
-    }
-
-    get_updates_timeout_config = {
-        'connect_timeout': telegram_timeout_config['connect_timeout'] + 5.0,
-        'read_timeout': telegram_timeout_config['read_timeout'] + 20.0, # Long polling needs longer read
-        'write_timeout': telegram_timeout_config['write_timeout'] + 5.0,
-    }
-
 
     application = (
         ApplicationBuilder()
         .token(config.TELEGRAM_BOT_TOKEN)
         .persistence(persistence)
-        .connect_timeout(telegram_timeout_config['connect_timeout'])
-        .read_timeout(telegram_timeout_config['read_timeout'])
-        .write_timeout(telegram_timeout_config['write_timeout'])
-        .get_updates_connect_timeout(get_updates_timeout_config['connect_timeout'])
-        .get_updates_read_timeout(get_updates_timeout_config['read_timeout'])
-        .get_updates_write_timeout(get_updates_timeout_config['write_timeout'])
+        .read_timeout(100)
+        .write_timeout(100)
         .build()
     )
 
