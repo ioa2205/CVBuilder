@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 try:
     genai.configure(api_key=config.GEMINI_API_KEY)
     model = genai.GenerativeModel(
-        'gemini-2.5-pro-exp-03-25',
+        'gemini-2.5-flash-preview-04-17',
         generation_config=genai.types.GenerationConfig(
              temperature=0.2 
         )
